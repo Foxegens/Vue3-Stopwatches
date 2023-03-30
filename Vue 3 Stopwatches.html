@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vue 3 Stopwatches</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        background: #353638;
+      }
+      .stopwatch {
+        position: relative;
+        width: 225px;
+        height: 120px;
+        border: none;
+        margin-inline: 50px;
+        margin-top: 50px;
+        text-align: center;
+        background-color: #696969;
+      }
+      .stopwatch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        justify-content: center;
+      }
+      @media (min-width: 320px) {
+        .stopwatch-grid {
+          grid-template-columns: repeat(1, minmax(200px, 1fr));
+        }
+        .stopwatch {
+            margin-inline:auto;
+        }
+      }
+      @media (min-width: 768px) {
+        .stopwatch-grid {
+          grid-template-columns: repeat(2, minmax(200px, 1fr));
+          width: 550px;
+          margin: auto;
+        }
+      }
+      @media (min-width: 1024px) {
+        .stopwatch-grid {
+          grid-template-columns: repeat(3, minmax(200px, 1fr));
+          width: 825px;
+        }
+      }
+      .time-display {
+        width: 225px;
+        height: 60px;
+        font-family: 'Gotham Pro', Arial, sans-serif;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 22px;
+        line-height: 60px;
+        text-align: center;
+        color: #9E9E9E;
+        border-bottom: 1px solid #9E9E9E;
+;
+      }
+      .time-display.running {
+        border-bottom-color: white;
+        color: white;
+      }
+      .controls {
+        width: 225px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 10px;
+      }
+      .running button {
+        color: white;
+      }
+      button {
+        line-height: 60px;
+        color:#9E9E9E;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
+      .stopwatchButton {
+        margin-top: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="stopwatch-grid">
+        <div
+          class="stopwatch"
+          v-for="(stopwatch, index) in stopwatches"
+          :key="index"
+        >
+          <div
+            class="time-display"
+            :class="{ running: stopwatch.running }"
+          >
+            <template v-if="stopwatch.hours > 0">{{ stopwatch.hours }}:</template>
+            <template v-if="stopwatch.minutes > 0">{{ stopwatch.minutes }}:</template>
+            {{ stopwatch.seconds }}
+          </div>
+          <div class="controls" :class="{ running: stopwatch.running }">
+            <button v-if="!stopwatch.running" @click="startStopwatch(index)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30">
+                <path fill="currentColor" d="M8 5v14l11-7z" />
+              </svg>
+            </button>
+            <button v-if="stopwatch.running" @click="pauseStopwatch(index)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30">
+                <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            </button>
+            <button @click="resetStopwatch(index)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30">
+                <path fill="currentColor" d="M12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" />
+              </svg>
+            </button>
+          </div>
+          
+        </div>
+        <div class="stopwatch">
+          <button class="stopwatchButton" @click="addStopwatch">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40">
+              <path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@next"></script>
+
+    <!-- Application code -->
+    <script>
+      const app = Vue.createApp({
+        data() {
+          return {
+            stopwatches: [
+              { hours: 0, minutes: 0, seconds: 0, running: false },
+              { hours: 0, minutes: 0, seconds: 0, running: false },
+            ],
+            intervals: [],
+          };
+        },
+        methods: {
+          startStopwatch(index) {
+            this.stopwatches[index].running = true;
+            this.intervals[index] = setInterval(() => {
+              this.stopwatches[index].seconds++;
+              if (this.stopwatches[index].seconds === 60) {
+                this.stopwatches[index].seconds = 0;
+                this.stopwatches[index].minutes++;
+              }
+              if (this.stopwatches[index].minutes === 60) {
+                this.stopwatches[index].minutes = 0;
+                this.stopwatches[index].hours++;
+              }
+            }, 1000);
+          },
+          pauseStopwatch(index) {
+            this.stopwatches[index].running = false;
+            clearInterval(this.intervals[index]);
+          },
+          resetStopwatch(index) {
+            this.stopwatches[index].running = false;
+            clearInterval(this.intervals[index]);
+            this.stopwatches[index] = { hours: 0, minutes: 0, seconds: 0 };
+            this.intervals.splice(index, 1);
+          },
+          addStopwatch() {
+            this.stopwatches.push({ hours: 0, minutes: 0, seconds: 0 });
+          },
+        },
+      });
+
+      app.mount("#app");
+    </script>
+  </body>
+</html>
